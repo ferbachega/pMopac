@@ -67,6 +67,19 @@ from pymol.cgo import *
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+class Handler:
+	""" Class doc """
+	
+	def __init__ (self):
+		""" Class initialiser """
+		pass
+
+	def print_aqui  (self, widget):
+		""" Function doc """
+		print('aqui')
+
+
+
 
 class pMopacMain:
 	""" Class doc """
@@ -76,7 +89,7 @@ class pMopacMain:
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("Mainwindow.glade")
-		#self.builder.connect_signals(Handler())
+		self.builder.connect_signals(Handler())
 		
 		self.win = self.builder.get_object("window1")
 		self.win.show_all()
@@ -100,7 +113,7 @@ class pMopacMain:
 pymol.finish_launching()                                #
 #Gtk.gdk.threads_init()
 
-print "Creating object"
+print ("Creating object")
 pMopacMain = pMopacMain()
 #pMopacMain.PyMOL_initialize()
 #EasyHybrid.run()
