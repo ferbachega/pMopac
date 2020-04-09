@@ -67,6 +67,14 @@ from pymol.cgo import *
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+people = [("Bucky Roberts", 67, "Exotic Dancer"),
+          ("Jenny Blue", 21, "Shepherd"),
+          ("John Smith", 55, "Programmer"),
+          ("Emma Anderson", 43, "Nurse"),
+          ("Emily Wilson", 28, "Teacher")]
+
+
+
 class Handler:
 	""" Class doc """
 	
@@ -80,33 +88,329 @@ class Handler:
 
 
 
+class MopacObject:
+    """ Class doc """
+
+    def __init__ (self):
+	""" Class initialiser """
+	#pass
+	self.mopacPath = '/opt/mopac/MOPAC2016.exe'
+	
+	self.parameters = {}
+	
+	self.atoms = []
+	self.fixed = []
+	self.fixed_idx = []
+	self.coords = []
+	
+    
+    
+    def load_mop (self, inputfile):
+	""" Function doc """
+	mopfile = open(inputfile, 'r')
+	for line in mopfile:
+	    print line
+	
+	
+	
+
+class MopacProject:
+    """ Class doc """
+
+    def __init__ (self):
+	""" Class initialiser """
+	pass
+	self.counter       = 0
+	self.index         = []
+	self.atoms         = []
+	self.coords        = []
+	self.coords_fixed  = []
+
+	
+    def energy (self):
+	""" Function doc """
+	print 'Energy'
+
+		
+
 
 class pMopacMain:
-	""" Class doc """
+    """ Class doc """
+
+    def __init__ (self):
+	""" Class initialiser """
+
+	self.builder = Gtk.Builder()
+	self.builder.add_from_file("Mainwindow.glade")
+	self.builder.connect_signals(self)
+
+	#self.toolbar = self.builder.get_object("toolbar")
+	#self.win.show_all()
+	self.win = self.builder.get_object("window1")
+	#self.win.connect("destroy", Gtk.main_quit)
+	#self.win.show_all()
+	#self.win.add(self.toolbar)
+
+	self.layout = self.builder.get_object("mainlayout")
 	
-	def __init__ (self):
-		""" Class initialiser """
-		
-		self.builder = Gtk.Builder()
-		self.builder.add_from_file("Mainwindow.glade")
-		self.builder.connect_signals(Handler())
-		
-		self.win = self.builder.get_object("window1")
-		self.win.show_all()
-		#self.win = Gtk.Window()
-		#self.win.connect("destroy", Gtk.main_quit)
-		#self.win.show_all()
+	
+	
+	
+	# convert to liststore
+	self.people = Gtk.ListStore(str, int, str)
+	for item in people:
+		self.people.append(list(item))
 
-		#self.button = Gtk.Button(label="Click Here")
-		#self.button.connect("clicked", self.on_button_clicked)
-		#self.win.add(self.button)
-		#self.win.connect("destroy", Gtk.main_quit)
-		#self.win.show_all()
-		Gtk.main()
+	# como acessar a liststore 
+	#for row in self.people: 
+	#	print (row[:])
 
-	def on_button_clicked(self, widget):
-		print("Hello World")
-		pymol.cmd.load('/home/fernando/QC_atoms.pdb')
+	#treeview 
+	self.treeview = Gtk.TreeView(self.people)
+	#self.treeview.connect("select-cursor-row", self.print_aqui)
+	#self.treeview.connect("row-activated", self.print_aqui)
+	#self.treeview.connect("cursor-changed", self.print_aqui)
+
+	for i, col_title in enumerate(['name', 'Age', 'prof']):
+	    print i, col_title
+	    renderer  = Gtk.CellRendererText()
+	    renderer.set_property("editable", True)
+	    #renderer.connect("edited", self.text_edited)
+	    column    = Gtk.TreeViewColumn(col_title, renderer, text = i)
+	    self.treeview.append_column(column)
+	self.layout.pack_start(self.treeview, True, True, 0)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	self.statusbar = Gtk.Statusbar()
+	self.layout.pack_start(self.statusbar, True, True, 0)
+	self.statusbar.push(1, "You clicked the button.")
+
+
+	#self.button = Gtk.Button(label="Click Here")
+	#self.button.connect("clicked", self.on_button_clicked)
+	#self.win.add(self.button)
+	self.win.connect("destroy", Gtk.main_quit)
+	self.win.show_all()
+	Gtk.main()
+
+
+    def open_file (self, widget):
+	""" Function doc """
+	chooser = Gtk.FileChooserDialog("Please choose a file", self.win,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+	#self.add_filters(dialog)
+	filter = Gtk.FileFilter()  
+	filter.set_name("Mopac input - *.mop")
+	#
+	filter.add_mime_type("Mopac input files")
+	filter.add_pattern("*.mop")
+	#
+	chooser.add_filter(filter)
+	filter = Gtk.FileFilter()
+	filter.set_name("Mopac aux - *.aux")
+	filter.add_pattern("*.aux")
+	#
+	#
+	chooser.add_filter(filter)
+	filter = Gtk.FileFilter()
+	filter.set_name("Mopac output  - *.out")
+	filter.add_pattern("*.out")
+	#
+	chooser.add_filter(filter)
+	filter = Gtk.FileFilter()
+	filter.set_name("Mopac output  - *.out")
+	filter.add_pattern("*.out")
+	#
+	
+	chooser.add_filter(filter)
+	filter = Gtk.FileFilter()
+	filter.set_name("All files")
+	filter.add_pattern("*")
+	#
+	chooser.add_filter(filter)  
+	# chooser.set_current_folder(data_path)
+
+	response = chooser.run()
+	
+	if response == Gtk.ResponseType.OK:
+	    #print("Open clicked")
+	    #print("File selected: " + chooser.get_filename())
+	    selectedFile = chooser.get_filename()
+	    what_type = selectedFile.split('.')
+	    _type = what_type[-1]
+	    if _type in ['mop', 'inp']:
+		_buffer = self.load_mop (selectedFile)
+		print _buffer
+	    
+	    
+	    
+	elif response == Gtk.ResponseType.CANCEL:
+	    print("Cancel clicked")
+	chooser.destroy()
+
+    
+    def on_button_clicked(self, widget):
+	print("Hello World")
+	pymol.cmd.load('sug1_B3_test.pdb')
+	self.statusbar.push(0, "sug1_B3_test.pdb")
+
+    def load_mop (self, inputfile):
+	""" Function doc 
+	* ===============================
+	* Input file for Mopac
+	* ===============================
+	PM7 XYZ    CHARGE=0 Singlet  BONDS AUX 
+
+	Mopac file generated by Gabedit
+	C  0.3500  1 -0.1550  1 -0.2600  1
+	C  -0.1410  1 0.9590  1 -1.1410  1
+	C  0.4230  1 2.1170  1 -0.8110  1
+	"""
+	_buffer = []
+	mopfile = open(inputfile, 'r')
+	
+	mopac_project = MopacProject()
+	
+	lines = mopfile.readlines()
+	
+	for line in lines:
+	    print line
+	    
+	    line2 = line.split()
+	    #print line2
+	    
+	    try:
+		atom    = str  (line2[0])
+		x       = float(line2[1])
+		x_fixed = int  (line2[2])
+		y       = float(line2[3])
+		y_fixed = int  (line2[4])
+		z       = float(line2[5])
+		z_fixed = int  (line2[6])		#pass
+		mopac_project.atoms       .append(atom)
+		mopac_project.coords      .append([x,y,z])
+		mopac_project.coords_fixed.append([x_fixed,y_fixed,z_fixed])
+	    
+	    except:
+		pass
+
+	for i, atom in enumerate(mopac_project.atoms):
+	    print i, atom, mopac_project.coords[i]
+	
+	self.from_mopac2pymol(mopac_project)
+	
+	
+
+    def load_aux (self, inputfile):
+	""" Function doc 
+	* ===============================
+	* Input file for Mopac
+	* ===============================
+	PM7 XYZ    CHARGE=0 Singlet  BONDS AUX 
+
+	Mopac file generated by Gabedit
+	C  0.3500  1 -0.1550  1 -0.2600  1
+	C  -0.1410  1 0.9590  1 -1.1410  1
+	C  0.4230  1 2.1170  1 -0.8110  1
+	"""
+	_buffer = []
+	mopfile = open(inputfile, 'r')
+	
+	mopac_project = MopacProject()
+	
+	lines = mopfile.readlines()
+	
+	for line in lines:
+	    print line
+	    
+	    line2 = line.split()
+	    #print line2
+	    
+	    try:
+		atom    = str  (line2[0])
+		x       = float(line2[1])
+		x_fixed = int  (line2[2])
+		y       = float(line2[3])
+		y_fixed = int  (line2[4])
+		z       = float(line2[5])
+		z_fixed = int  (line2[6])		#pass
+		mopac_project.atoms       .append(atom)
+		mopac_project.coords      .append([x,y,z])
+		mopac_project.coords_fixed.append([x_fixed,y_fixed,z_fixed])
+	    
+	    except:
+		pass
+
+	for i, atom in enumerate(mopac_project.atoms):
+	    print i, atom, mopac_project.coords[i]
+
+    
+    def export_xyzfile (self, mopac_project):
+	""" Function doc """
+	tmpfile = open('/home/fernando/temp.xyz', 'w')
+	size = len(mopac_project.atoms)
+	text =  '{:<100}\n'.format(size)
+	text += '\n'
+	for i, atom in enumerate(mopac_project.atoms):
+	    coords = mopac_project.coords[i]
+	    text   += '{:<2}  {:<10}  {:<10}  {:<10}\n'.format( atom, coords[0],coords[1], coords[2] )
+	    print i, atom, mopac_project.coords[i]	
+	
+	tmpfile.write(text)
+	
+	    
+    
+    def from_mopac2pymol (self, obj = None, _type = 'xyz'):
+	""" Function doc """
+	if _type == 'xyz':
+	    fileout = self.export_xyzfile ( obj)
+	    pymol.cmd.load('/home/fernando/temp.xyz')
+	    
+	
+
+
+
+
+
+#win = FileChooserWindow()
+#win.connect("destroy", Gtk.main_quit)
+#win.show_all()
+#Gtk.main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
